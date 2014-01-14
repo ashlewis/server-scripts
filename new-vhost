@@ -1,0 +1,30 @@
+#!/bin/bash
+
+# This script creates virtual hosts
+# you should put it under /usr/local/bin/
+# and run it with sudo newsite
+
+# Set the path to your localhost
+www=/var/www
+echo "Enter directory name under $www"
+read sn
+
+# Create the file with VirtualHost configuration in /etc/apache2/site-available/
+echo "<VirtualHost *:80>
+        DocumentRoot /var/www/$sn/
+        ServerName $sn.dev
+        <Directory /var/www/$sn/>
+                Options +Indexes +FollowSymLinks +MultiViews +Includes
+                AllowOverride All
+                Order allow,deny
+                allow from all
+        </Directory>
+</VirtualHost>" > /etc/apache2/sites-available/$sn.dev.conf
+
+# Enable the site
+ln -s  /etc/apache2/sites-available/$sn.dev.conf /etc/apache2/sites-enabled/$sn.dev.conf
+
+# Reload Apache2
+/etc/init.d/apache2 restart
+
+echo "add <your_ip> $sn.dev to your host OS' host file and boom your new site is available at http://$sn.dev"

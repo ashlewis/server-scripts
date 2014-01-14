@@ -1,0 +1,17 @@
+#!/bin/bash
+
+# This script creates scaffolding for new custom drupal module
+# you should put it under /usr/local/bin/
+# and run it with sudo new-custom-module
+
+echo "Enter module name"
+read mn
+
+echo "Enter module title"
+read mt
+
+drush mbdl
+drush mb $mn init form_alter --write --name="$mt" --dep="jquery_update" --parent="./sites/all/modules/custom"
+chmod 777 sites/all/modules/$mn -R
+
+echo "created new custom module in ./sites/all/modules/custom/$mn"

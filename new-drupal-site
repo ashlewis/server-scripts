@@ -1,0 +1,67 @@
+#!/bin/bash
+
+# This script creates virtual hosts and prepares your mysql DB and drupal install it requires var/www/drupal.make
+# you should put it under /usr/local/bin/
+# and run it with sudo newsite
+
+# Set the path to your localhost
+www=/var/www
+echo "Enter directory name under $www"
+read sn
+
+# download and install drupal using drupal.make
+cd $www
+drush make drupal.make $sn
+
+cd $www/$sn  
+drush site-install standard -y --db-url=mysql://<username>:<password>@localhost/$sn --site-name=$sn --account-pass=<password> --account-mail=<email>
+echo "making drupal site at $sn"
+
+# enable modules
+drush en -y views  views_ui devel devel_generate jquery_update zen token pathauto admin_menu features
+echo "enabling views, devel and jquery_update"
+ 
+# Configure JQuery update 
+drush vset -y jquery_update_compression_type "min";
+drush vset -y jquery_update_jquery_cdn "google";
+drush -y eval "variable_set('jquery_update_jquery_version', strval(1.7));"
+echo "configuring jQuery update"
+
+# create new zen subtheme
+drush cc all
+drush zen "$sn" $sn
+drush en -y $sn
+drush vset theme_default $sn
+echo "creating new zen subtheme" 
+
+# add dummy content
+drush generate-content 10 5
+echo "generating c dummy content"
+
+# make files dir writable
+chmod 777 $www/$sn -R
+chmod 555 $www/$sn/sites/default/settings.php
+chmod 555 $www/$sn/sites/default/
+
+# Create the file with VirtualHost configuration in /etc/apache2/site-available/
+#echo "<VirtualHost *:80>
+#        DocumentRoot /var/www/$sn/
+#        ServerName $sn.dev
+#        <Directory /var/www/$sn/>
+#                Options +Indexes +FollowSymLinks +MultiViews +Includes
+#                AllowOverride All
+#                Order allow,deny
+#                allow from all
+#        </Directory>
+#</VirtualHost>" > /etc/apache2/sites-available/$sn.dev.conf
+
+# Enable the site
+#ln -s  /etc/apache2/sites-available/$sn.dev.conf /etc/apache2/sites-enabled/$sn.dev.conf
+#echo "creating vhosts"
+
+# Reload Apache2
+#/etc/init.d/apache2 restart
+#echo "reloading apache"
+
+echo "run sudo new-vhost and add <your_ip> $sn.dev to your host OS' host file and boom your new site is available at http://$sn.dev"
+
